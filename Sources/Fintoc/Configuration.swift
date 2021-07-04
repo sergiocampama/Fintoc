@@ -1,4 +1,4 @@
-import APIBuilder
+@_exported import APIBuilder
 import Foundation
 
 public struct FintocAPIConfiguration: APIConfiguration {

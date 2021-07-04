@@ -7,6 +7,8 @@ Swift bindings for the [Fintoc](https://fintoc.com) API.
 ## Example usage
 
 ```swift
+import Fintoc
+
 let configuration = FintocAPIConfiguration(authToken: "<API Key>")
 let provider = APIProvider(configuration: configuration)
 
