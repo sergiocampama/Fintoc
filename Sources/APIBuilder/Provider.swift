@@ -1,4 +1,5 @@
 import Foundation
+
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
@@ -42,7 +43,8 @@ public class APIProvider {
         requestExecutor.execute(request) { result in
             let newResult: Result<T, Error> = result.flatMap { response in
                 guard response.statusCode >= 200 && response.statusCode < 300 else {
-                    return .failure(StringError("Received status code \(response.statusCode): \(String(decoding: response.data, as: UTF8.self))"))
+                    let body = String(decoding: response.data, as: UTF8.self)
+                    return .failure(StringError("Received status code \(response.statusCode): \(body)"))
                 }
                 do {
                     let decoded = try JSONDecoder().decode(T.self, from: response.data)
@@ -60,7 +62,8 @@ public class APIProvider {
         requestExecutor.execute(request) { result in
             let newResult: Result<Void, Error> = result.flatMap { response in
                 guard response.statusCode >= 200 && response.statusCode < 300 else {
-                    return .failure(StringError("Received status code \(response.statusCode): \(String(decoding: response.data, as: UTF8.self))"))
+                    let body = String(decoding: response.data, as: UTF8.self)
+                    return .failure(StringError("Received status code \(response.statusCode): \(body)"))
                 }
                 return .success(())
             }

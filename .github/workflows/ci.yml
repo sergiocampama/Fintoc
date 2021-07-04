@@ -18,3 +18,23 @@ jobs:
       run: swift build -c release
     - name: Run tests
       run: swift test -c release
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2
+    - name: Install swift-format
+      uses: Cyberbeni/install-swift-tool@v2
+      with:
+        url: https://github.com/apple/swift-format
+        branch: swift-5.4-branch
+    - name: Check Format
+      run: |
+        swift-format -i -r -m format Sources Tests
+        # See https://stackoverflow.com/questions/34807971/why-does-git-diff-index-head-result-change-for-touched-files-after-git-diff-or-g
+        git update-index -q --really-refresh
+        if ! git diff-index --quiet HEAD; then
+        echo "The following files need to be formatted with swift-format"
+        git diff-index --name-only HEAD
+        exit 1
+        fi

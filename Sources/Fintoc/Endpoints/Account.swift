@@ -1,7 +1,7 @@
 import APIBuilder
 
-public extension APIEndpoint where T == [Account] {
-    static func getAccounts() -> Self {
+extension APIEndpoint where T == [Account] {
+    public static func getAccounts() -> Self {
         APIEndpoint {
             "/v1/accounts"
             HTTPMethod.get
@@ -9,8 +9,8 @@ public extension APIEndpoint where T == [Account] {
     }
 }
 
-public extension APIEndpoint where T == Account {
-    static func getAccount(accountID: String) -> Self {
+extension APIEndpoint where T == Account {
+    public static func getAccount(accountID: String) -> Self {
         APIEndpoint {
             "/v1/accounts/\(accountID)"
             HTTPMethod.get

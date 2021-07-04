@@ -1,8 +1,8 @@
 import APIBuilder
 import Foundation
 
-public extension APIEndpoint where T == [Link] {
-    static func getLinks() -> APIEndpoint {
+extension APIEndpoint where T == [Link] {
+    public static func getLinks() -> APIEndpoint {
         APIEndpoint {
             "/v1/links"
             HTTPMethod.get
@@ -10,15 +10,15 @@ public extension APIEndpoint where T == [Link] {
     }
 }
 
-public extension APIEndpoint where T == Link {
-    static func getLink(linkKey: String) -> Self {
+extension APIEndpoint where T == Link {
+    public static func getLink(linkKey: String) -> Self {
         APIEndpoint {
             "/v1/links/\(linkKey)"
             HTTPMethod.get
         }
     }
 
-    static func updateLink(linkKey: String, active: Bool) -> Self {
+    public static func updateLink(linkKey: String, active: Bool) -> Self {
         APIEndpoint {
             "/v1/links/\(linkKey)"
             HTTPMethod.get
@@ -29,8 +29,8 @@ public extension APIEndpoint where T == Link {
     }
 }
 
-public extension APIEndpoint where T == Void {
-    static func deleteLink(linkKey: String) -> Self {
+extension APIEndpoint where T == Void {
+    public static func deleteLink(linkKey: String) -> Self {
         APIEndpoint {
             "/v1/links/\(linkKey)"
             HTTPMethod.delete
