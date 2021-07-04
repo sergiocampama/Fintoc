@@ -2,7 +2,9 @@ import APIBuilder
 import ArgumentParser
 import Fintoc
 import Foundation
+#if os(macOS)
 import KeychainAccess
+#endif
 
 struct FintocTool: ParsableCommand {
     static var configuration = CommandConfiguration(
@@ -75,10 +77,12 @@ struct FintocTool: ParsableCommand {
     }
 
     private func getSecret(_ key: String, prompt: String) throws -> String {
+        #if os(macOS)
         let keychain = Keychain(service: "fintoc").accessibility(.alwaysThisDeviceOnly)
         if let apiKey = keychain[key] {
             return apiKey
         }
+        #endif
         let inputKey = try TerminalHelpers.requestSecret(prompt: "\(prompt): ")
         keychain[key] = inputKey
         return inputKey

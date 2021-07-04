@@ -18,7 +18,7 @@ let package = Package(
             dependencies: [
                 "APIBuilder",
                 "Fintoc",
-                "KeychainAccess",
+                .product("KeychainAccess", "KeychainAccess", .when(platforms: [.macOS])),
                 .product("swift-argument-parser", "ArgumentParser"),
             ]
         ),
