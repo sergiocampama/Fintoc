@@ -1,5 +1,7 @@
 # Fintoc Swift
 
+[![Fintoc Swift CI](https://github.com/sergiocampama/Fintoc/actions/workflows/ci.yml/badge.svg)](https://github.com/sergiocampama/Fintoc/actions/workflows/ci.yml)
+
 Swift bindings for the [Fintoc](https://fintoc.com) API.
 
 ## Example usage
