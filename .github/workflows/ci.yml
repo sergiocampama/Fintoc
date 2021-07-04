@@ -19,6 +19,8 @@ jobs:
     - name: Run tests
       run: swift test -c release
   format:
+    # Disable formatter since it doesn't support async
+    if: false
     runs-on: ubuntu-latest
     steps:
     - name: Checkout sources
