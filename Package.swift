@@ -25,7 +25,7 @@ let package = Package(
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
         .target(name: "APIBuilder"),
 
-        .target(name: "TestHelpers"),
+        .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),
         .testTarget(name: "FintocTests", dependencies: ["Fintoc", "TestHelpers"]),
     ]
