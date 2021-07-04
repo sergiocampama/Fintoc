@@ -1,19 +1,20 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
-    name: "FintocSwift",
+    name: "Fintoc",
     products: [
-        .executable(name: "ft", targets: ["ft"])
+        .executable(name: "ft", targets: ["ft"]),
+        .library(name: "Fintoc", targets: ["Fintoc"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.0.1"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "ft",
             dependencies: [
                 "APIBuilder",

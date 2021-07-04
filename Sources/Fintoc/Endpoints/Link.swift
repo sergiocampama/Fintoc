@@ -11,16 +11,16 @@ public extension APIEndpoint where T == [Link] {
 }
 
 public extension APIEndpoint where T == Link {
-    static func getLink(linkID: String) -> Self {
+    static func getLink(linkKey: String) -> Self {
         APIEndpoint {
-            "/v1/links/\(linkID)"
+            "/v1/links/\(linkKey)"
             HTTPMethod.get
         }
     }
 
-    static func updateLink(linkID: String, active: Bool) -> Self {
+    static func updateLink(linkKey: String, active: Bool) -> Self {
         APIEndpoint {
-            "/v1/links/\(linkID)"
+            "/v1/links/\(linkKey)"
             HTTPMethod.get
             [String: String]()
             try! JSONEncoder().encode(["active": active])
@@ -30,9 +30,9 @@ public extension APIEndpoint where T == Link {
 }
 
 public extension APIEndpoint where T == Void {
-    static func deleteLink(linkID: String) -> Self {
+    static func deleteLink(linkKey: String) -> Self {
         APIEndpoint {
-            "/v1/links/\(linkID)"
+            "/v1/links/\(linkKey)"
             HTTPMethod.delete
         }
     }

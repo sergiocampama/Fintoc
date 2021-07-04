@@ -12,53 +12,76 @@ struct FintocTool: ParsableCommand {
 
     func run() throws {
         let configuration = try FintocAPIConfiguration(
-            authToken: getAPIKey()
+            authToken: getSecret("apiKey", prompt: "Enter your Fintoc API key")
         )
         let provider = APIProvider(configuration: configuration)
 
-        let link = try provider.syncRequest(.getLinks())[0]
+        let links = try provider.syncRequest(.getLinks())
 
-        let linkKey = try getLinkKey(for: link)
-
-        let linkDetails = try provider.syncRequest(.getLink(linkID: linkKey))
-
-        linkDetails.accounts?.forEach {
-            print($0.name, $0.id, $0.currency, $0.balance.current)
+        let sparseLink: Link
+        if links.isEmpty {
+            print("No links were found")
+            return
+        } else if links.count > 1 {
+            let index = try TerminalHelpers.choose(
+                prompt: "Which link do you want work with?",
+                options: links.map(\.institution.name)
+            )
+            sparseLink = links[index]
+        } else {
+            sparseLink = links[0]
+            print("Using link for \(sparseLink.institution.name)")
         }
 
-        for account in linkDetails.accounts ?? [] {
-            let movements = try provider.syncRequest(.getMovements(linkID: linkKey, accountID: account.id))
-            print("Movements for: ", account.name)
-            print(movements)
+        let linkKey = try getSecret(
+            sparseLink.id,
+            prompt: "Enter the link key for \(sparseLink.institution.name)"
+        )
+
+        let link = try provider.syncRequest(.getLink(linkKey: linkKey))
+
+        guard let accounts = link.accounts, !accounts.isEmpty else {
+            print("No accounts found for \(link.institution.name)")
+            return
+        }
+
+        let account: Account
+        if accounts.count == 1 {
+            account = accounts[0]
+            print("Using account \(account.name)")
+        } else {
+            let index = try TerminalHelpers.choose(
+                prompt: "Which account do you want work with?",
+                options: accounts.map { "\($0.name) - \($0.number) - \($0.official_name)" }
+            )
+            account = accounts[index]
+        }
+
+        print(account.name, account.balance.available, account.currency)
+
+        guard try TerminalHelpers.agree(prompt: "Would you like to see your movements?") else {
+            return
+        }
+
+        let movements = try provider.syncRequest(.getMovements(linkKey: linkKey, accountID: account.id))
+
+        if movements.isEmpty {
+            print("No movements to display")
+        } else {
+            movements.forEach {
+                print($0.comment)
+            }
         }
     }
 
-    private func getLinkKey(for link: Link) throws -> String {
-        let keychain = Keychain(service: "fintoc")
-        if let linkKey = keychain[link.id] {
-            return linkKey
-        }
-        let inputKey = try promptForSecret(prompt: "Enter the link key for \(link.institution.name): ")
-        keychain[link.id] = inputKey
-        return inputKey
-    }
-
-    private func getAPIKey() throws -> String {
-        let keychain = Keychain(service: "fintoc")
-        if let apiKey = keychain["apiKey"] {
+    private func getSecret(_ key: String, prompt: String) throws -> String {
+        let keychain = Keychain(service: "fintoc").accessibility(.alwaysThisDeviceOnly)
+        if let apiKey = keychain[key] {
             return apiKey
         }
-        let inputKey = try promptForSecret(prompt: "Enter your Fintoc API key: ")
-        keychain["apiKey"] = inputKey
+        let inputKey = try TerminalHelpers.requestSecret(prompt: "\(prompt): ")
+        keychain[key] = inputKey
         return inputKey
-    }
-
-    private func promptForSecret(prompt: String) throws -> String {
-        guard let cString = getpass(prompt) else {
-            throw StringError("Could not read value from input")
-        }
-
-        return String(cString: cString)
     }
 }
 
