@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public class DefaultRequestExecutor: RequestExecutor {
     let urlSession = URLSession(configuration: .default)

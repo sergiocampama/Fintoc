@@ -83,8 +83,13 @@ struct FintocTool: ParsableCommand {
             return apiKey
         }
         #endif
+
         let inputKey = try TerminalHelpers.requestSecret(prompt: "\(prompt): ")
+
+        #if os(macOS)
         keychain[key] = inputKey
+        #endif
+
         return inputKey
     }
 }

@@ -1,5 +1,8 @@
 import APIBuilder
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public class MockRequestExecutor: RequestExecutor {
     public let expectedResult: Result<Response, Error>
