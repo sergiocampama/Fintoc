@@ -12,7 +12,7 @@ final class ProviderTests: XCTestCase {
     func testVoidRequest() throws {
         let expectedResponse = Response(statusCode: 200, data: Data())
         let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
-        let endpoint = APIEndpoint<Void>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<Void>(path: "/someResource")
 
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
@@ -30,7 +30,7 @@ final class ProviderTests: XCTestCase {
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
         let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
-        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
@@ -50,7 +50,7 @@ final class ProviderTests: XCTestCase {
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
         let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
-        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
@@ -66,7 +66,7 @@ final class ProviderTests: XCTestCase {
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
         let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
-        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
@@ -76,7 +76,7 @@ final class ProviderTests: XCTestCase {
     #endif
 
     func testBasicEndpointRequest() throws {
-        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
         let apiProvider = APIProvider(configuration: configuration)
         let urlRequest = apiProvider.requestForEndpoint(endpoint)
         XCTAssertEqual(urlRequest.url?.absoluteString, "https://some.api.com/someResource")
@@ -105,7 +105,7 @@ final class ProviderTests: XCTestCase {
             host: URL(string: "https://some.api.com")!,
             requestHeaders: ["Authorization": "my_api_token"]
         )
-        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
         let apiProvider = APIProvider(configuration: configuration)
         let urlRequest = apiProvider.requestForEndpoint(endpoint)
         XCTAssertEqual(urlRequest.url?.absoluteString, "https://some.api.com/someResource")

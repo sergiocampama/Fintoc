@@ -3,19 +3,13 @@ import Foundation
 
 extension APIEndpoint where T == [Link] {
     public static func getLinks() -> APIEndpoint {
-        APIEndpoint {
-            "/v1/links"
-            HTTPMethod.get
-        }
+        APIEndpoint { "/v1/links" }
     }
 }
 
 extension APIEndpoint where T == Link {
     public static func getLink(linkKey: String) -> Self {
-        APIEndpoint {
-            "/v1/links/\(linkKey)"
-            HTTPMethod.get
-        }
+        APIEndpoint { "/v1/links/\(linkKey)" }
     }
 
     public static func updateLink(linkKey: String, active: Bool) -> Self {

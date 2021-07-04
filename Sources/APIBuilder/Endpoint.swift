@@ -21,7 +21,7 @@ public struct APIEndpoint<T> {
 
     public init(
         path: String,
-        method: HTTPMethod,
+        method: HTTPMethod = .get,
         parameters: [String: String]? = nil,
         body: Data? = nil,
         contentType: String? = nil
@@ -38,7 +38,7 @@ public struct APIEndpoint<T> {
 public struct APIEndpointBuilder<T> {
     public static func buildBlock(
         _ path: String,
-        _ method: HTTPMethod,
+        _ method: HTTPMethod = .get,
         _ parameters: [String: String]? = nil,
         _ body: Data? = nil,
         _ contentType: String? = nil
