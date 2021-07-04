@@ -58,6 +58,23 @@ final class ProviderTests: XCTestCase {
         XCTAssertEqual(response, expectedMessage)
     }
 
+    #if swift(>=5.5)
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    func testAsyncDataRequest() async throws {
+        let expectedMessage = SomeCodable(message: "hello, world!")
+
+        let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
+        let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
+        let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
+
+        let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
+
+        let response = try await apiProvider.asyncRequest(endpoint)
+        XCTAssertEqual(response, expectedMessage)
+    }
+    #endif
+
     func testBasicEndpointRequest() throws {
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource", method: .get)
         let apiProvider = APIProvider(configuration: configuration)

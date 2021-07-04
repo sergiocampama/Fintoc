@@ -16,4 +16,10 @@ public struct Response: Equatable {
 
 public protocol RequestExecutor {
     func execute(_ request: URLRequest, completion: @escaping (Result<Response, Error>) -> Void)
+
+    #if swift(>=5.5)
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    func execute(_ request: URLRequest) async throws -> Response
+    #endif
 }

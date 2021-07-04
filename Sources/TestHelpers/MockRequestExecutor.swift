@@ -17,4 +17,12 @@ public class MockRequestExecutor: RequestExecutor {
             completion(self.expectedResult)
         }
     }
+
+    #if swift(>=5.5)
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    public func execute(_ request: URLRequest) async throws -> Response {
+        return try expectedResult.get()
+    }
+    #endif
 }

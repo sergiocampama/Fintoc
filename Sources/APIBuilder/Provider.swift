@@ -57,6 +57,35 @@ public class APIProvider {
         }
     }
 
+    #if swift(>=5.5)
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    public func asyncRequest(_ endpoint: APIEndpoint<Void>) async throws {
+        let request = requestForEndpoint(endpoint)
+        let response = try await requestExecutor.execute(request)
+        guard response.statusCode >= 200 && response.statusCode < 300 else {
+            let body = String(decoding: response.data, as: UTF8.self)
+            throw StringError("Received status code \(response.statusCode): \(body)")
+        }
+    }
+    #endif
+
+    #if swift(>=5.5)
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    public func asyncRequest<T: Codable>(_ endpoint: APIEndpoint<T>) async throws -> T {
+        let request = requestForEndpoint(endpoint)
+        let response = try await requestExecutor.execute(request)
+        guard response.statusCode >= 200 && response.statusCode < 300 else {
+            let body = String(decoding: response.data, as: UTF8.self)
+            throw StringError("Received status code \(response.statusCode): \(body)")
+        }
+
+        let decoded = try JSONDecoder().decode(T.self, from: response.data)
+        return decoded
+    }
+    #endif
+
     public func request(_ endpoint: APIEndpoint<Void>, completion: @escaping (Result<Void, Error>) -> Void) {
         let request = requestForEndpoint(endpoint)
         requestExecutor.execute(request) { result in
