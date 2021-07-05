@@ -14,7 +14,7 @@ public class DefaultRequestExecutor: RequestExecutor {
             if let error = error {
                 completion(.failure(StringError("\(error)")))
             } else if let response = response as? HTTPURLResponse, let data = data {
-                completion(.success(Response(statusCode: response.statusCode, data: data)))
+                completion(.success(Response(httpResponse: response, data: data)))
             } else {
                 completion(.failure(StringError("Unknown error")))
             }
@@ -30,7 +30,7 @@ public class DefaultRequestExecutor: RequestExecutor {
             throw StringError("Unknown error")
         }
 
-        return Response(statusCode: httpResponse.statusCode, data: data)
+        return Response(httpResponse: httpResponse, data: data)
     }
     #endif
 }

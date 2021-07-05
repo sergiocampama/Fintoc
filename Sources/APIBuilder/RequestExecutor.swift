@@ -5,12 +5,16 @@ import FoundationNetworking
 #endif
 
 public struct Response: Equatable {
-    public let statusCode: Int
+    public let httpResponse: HTTPURLResponse
     public let data: Data
 
-    public init(statusCode: Int, data: Data) {
-        self.statusCode = statusCode
+    public init(httpResponse: HTTPURLResponse, data: Data) {
+        self.httpResponse = httpResponse
         self.data = data
+    }
+
+    var statusCode: Int {
+        httpResponse.statusCode
     }
 }
 

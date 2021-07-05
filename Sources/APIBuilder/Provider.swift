@@ -1,4 +1,5 @@
 import Foundation
+@_implementationOnly import WebLinking
 
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -38,23 +39,15 @@ public class APIProvider {
         return try result!.get()
     }
 
-    public func request<T: Codable>(_ endpoint: APIEndpoint<T>, completion: @escaping (Result<T, Error>) -> Void) {
-        let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request) { result in
-            let newResult: Result<T, Error> = result.flatMap { response in
-                guard response.statusCode >= 200 && response.statusCode < 300 else {
-                    let body = String(decoding: response.data, as: UTF8.self)
-                    return .failure(StringError("Received status code \(response.statusCode): \(body)"))
-                }
-                do {
-                    let decoded = try JSONDecoder().decode(T.self, from: response.data)
-                    return .success(decoded)
-                } catch {
-                    return .failure(error)
-                }
-            }
-            completion(newResult)
+    public func syncRequest<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) throws -> Paged<T> {
+        var result: Result<Paged<T>, Error>? = nil
+        request(endpoint) { innerResult in
+            result = innerResult
         }
+        while result == nil && RunLoop.current.run(mode: .default, before: .distantPast) {
+            usleep(1)
+        }
+        return try result!.get()
     }
 
     #if swift(>=5.5)
@@ -63,26 +56,26 @@ public class APIProvider {
     public func asyncRequest(_ endpoint: APIEndpoint<Void>) async throws {
         let request = requestForEndpoint(endpoint)
         let response = try await requestExecutor.execute(request)
-        guard response.statusCode >= 200 && response.statusCode < 300 else {
-            let body = String(decoding: response.data, as: UTF8.self)
-            throw StringError("Received status code \(response.statusCode): \(body)")
-        }
+        try validate(response: response)
     }
-    #endif
 
-    #if swift(>=5.5)
     @available(swift 5.5)
     @available(macOS 12.0, *)
     public func asyncRequest<T: Codable>(_ endpoint: APIEndpoint<T>) async throws -> T {
         let request = requestForEndpoint(endpoint)
         let response = try await requestExecutor.execute(request)
-        guard response.statusCode >= 200 && response.statusCode < 300 else {
-            let body = String(decoding: response.data, as: UTF8.self)
-            throw StringError("Received status code \(response.statusCode): \(body)")
-        }
+        return try unpack(response: response)
+    }
 
-        let decoded = try JSONDecoder().decode(T.self, from: response.data)
-        return decoded
+    @available(swift 5.5)
+    @available(macOS 12.0, *)
+    public func asyncRequest<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) async throws -> Paged<T> {
+        let request = requestForEndpoint(endpoint)
+        let response = try await requestExecutor.execute(request)
+        let data = try unpack(response: response) as T
+
+        let pageLinks = self.pageLinks(from: response.httpResponse, for: endpoint)
+        return Paged(data: data, pageLinks: pageLinks)
     }
     #endif
 
@@ -90,11 +83,46 @@ public class APIProvider {
         let request = requestForEndpoint(endpoint)
         requestExecutor.execute(request) { result in
             let newResult: Result<Void, Error> = result.flatMap { response in
-                guard response.statusCode >= 200 && response.statusCode < 300 else {
-                    let body = String(decoding: response.data, as: UTF8.self)
-                    return .failure(StringError("Received status code \(response.statusCode): \(body)"))
+                do {
+                    try self.validate(response: response)
+                    return .success(())
+                } catch {
+                    return .failure(error)
                 }
-                return .success(())
+            }
+            completion(newResult)
+        }
+    }
+
+    public func request<T: Codable>(_ endpoint: APIEndpoint<T>, completion: @escaping (Result<T, Error>) -> Void) {
+        let request = requestForEndpoint(endpoint)
+        requestExecutor.execute(request) { result in
+            let newResult: Result<T, Error> = result.flatMap { response in
+                do {
+                    return try .success(self.unpack(response: response))
+                } catch {
+                    return .failure(error)
+                }
+            }
+            completion(newResult)
+        }
+    }
+
+    public func request<T: Codable>(
+        _ endpoint: APIEndpoint<Paged<T>>,
+        completion: @escaping (Result<Paged<T>, Error>) -> Void
+    ) {
+        let request = requestForEndpoint(endpoint)
+        requestExecutor.execute(request) { result in
+            let newResult: Result<Paged<T>, Error> = result.flatMap { response in
+                do {
+                    let data = try self.unpack(response: response) as T
+                    let pageLinks = self.pageLinks(from: response.httpResponse, for: endpoint)
+                    return .success(Paged(data: data, pageLinks: pageLinks))
+
+                } catch {
+                    return .failure(error)
+                }
             }
             completion(newResult)
         }
@@ -124,5 +152,36 @@ public class APIProvider {
         }
 
         return request
+    }
+
+    private func validate(response: Response) throws {
+        guard response.statusCode >= 200 && response.statusCode < 300 else {
+            let body = String(decoding: response.data, as: UTF8.self)
+            throw StringError("Received status code \(response.statusCode): \(body)")
+        }
+    }
+
+    private func unpack<T: Codable>(response: Response) throws -> T {
+        try validate(response: response)
+        do {
+            let decoded = try JSONDecoder().decode(T.self, from: response.data)
+            return decoded
+        } catch {
+            let body = String(decoding: response.data, as: UTF8.self)
+            throw StringError("Error decoding: \(error) \(body)")
+        }
+    }
+
+    private func pageLinks<T>(
+        from response: HTTPURLResponse,
+        for endpoint: APIEndpoint<Paged<T>>
+    ) -> [String: APIEndpoint<Paged<T>>] {
+        response.links.filter { link in
+            link.relationType != nil
+        }.reduce(into: [:]) { dictionary, link in
+            let components = URLComponents(string: link.uri)!
+            let parameters = (components.queryItems ?? []).reduce(into: [String: Any]()) { $0[$1.name] = $1.value }
+            dictionary[link.relationType!] = endpoint.replacing(path: components.path, parameters: parameters)
+        }
     }
 }

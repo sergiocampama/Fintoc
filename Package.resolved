@@ -14,9 +14,18 @@
         "package": "swift-argument-parser",
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
-          "branch": null,
-          "revision": "986d191f94cec88f6350056da59c2e59e83d1229",
-          "version": "0.4.3"
+          "branch": "async",
+          "revision": "ddc37e4c53ed030bf2d75aaf3e9d489cc6495134",
+          "version": null
+        }
+      },
+      {
+        "package": "WebLinking.swift",
+        "repositoryURL": "https://github.com/andlister/WebLinking.swift",
+        "state": {
+          "branch": "master",
+          "revision": "e8f93b4896bafda8bcf353fc4460bfce5351c2b7",
+          "version": null
         }
       }
     ]

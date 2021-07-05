@@ -4,13 +4,15 @@ import PackageDescription
 
 let package = Package(
     name: "Fintoc",
+    platforms: [.macOS("12.0")],
     products: [
         .executable(name: "ft", targets: ["ft"]),
         .library(name: "Fintoc", targets: ["Fintoc"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "0.0.1"),
+        .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
+        .package(url: "https://github.com/andlister/WebLinking.swift", .branch("master")),
     ],
     targets: [
         .executableTarget(
@@ -23,7 +25,7 @@ let package = Package(
             ]
         ),
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
-        .target(name: "APIBuilder"),
+        .target(name: "APIBuilder", dependencies: [.product("WebLinking.swift", "WebLinking")]),
 
         .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),

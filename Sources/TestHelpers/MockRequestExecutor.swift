@@ -26,3 +26,17 @@ public class MockRequestExecutor: RequestExecutor {
     }
     #endif
 }
+
+extension Response {
+    public init(statusCode: Int, data: Data) {
+        self.init(
+            httpResponse: HTTPURLResponse(
+                url: URL(string: "http://some.data")!,
+                statusCode: statusCode,
+                httpVersion: nil,
+                headerFields: nil
+            )!,
+            data: data
+        )
+    }
+}

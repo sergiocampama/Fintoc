@@ -1,11 +1,15 @@
 import APIBuilder
 
-extension APIEndpoint where T == [Movement] {
-    public static func getMovements(linkKey: String, accountID: String) -> Self {
+extension APIEndpoint where T == Paged<[Movement]> {
+    public static func getMovements(linkKey: String, accountID: String, page: Int = 1, perPage: Int = 30) -> Self {
         APIEndpoint {
             "/v1/accounts/\(accountID)/movements"
             HTTPMethod.get
-            ["link_token": linkKey]
+            [
+                "link_token": linkKey,
+                "per_page": perPage,
+                "page": page,
+            ]
         }
     }
 }

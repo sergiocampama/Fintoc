@@ -6,19 +6,23 @@ import Foundation
 import KeychainAccess
 #endif
 
+@main
 struct FintocTool: ParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "ft",
         abstract: "Tool to interface with the Fintoc API"
     )
 
-    func run() throws {
+    @Option()
+    var movementsPerPage = 30
+
+    func run() async throws {
         let configuration = try FintocAPIConfiguration(
             authToken: getSecret("apiKey", prompt: "Enter your Fintoc API key")
         )
         let provider = APIProvider(configuration: configuration)
 
-        let links = try provider.syncRequest(.getLinks())
+        let links = try await provider.asyncRequest(.getLinks())
 
         let sparseLink: Link
         if links.isEmpty {
@@ -40,7 +44,7 @@ struct FintocTool: ParsableCommand {
             prompt: "Enter the link key for \(sparseLink.institution.name)"
         )
 
-        let link = try provider.syncRequest(.getLink(linkKey: linkKey))
+        let link = try await provider.asyncRequest(.getLink(linkKey: linkKey))
 
         guard let accounts = link.accounts, !accounts.isEmpty else {
             print("No accounts found for \(link.institution.name)")
@@ -61,19 +65,24 @@ struct FintocTool: ParsableCommand {
 
         print(account.name, account.balance.available, account.currency)
 
-        guard try TerminalHelpers.agree(prompt: "Would you like to see your movements?") else {
-            return
-        }
+        var endpoint: APIEndpoint? = APIEndpoint.getMovements(
+            linkKey: linkKey,
+            accountID: account.id,
+            perPage: movementsPerPage
+        )
 
-        let movements = try provider.syncRequest(.getMovements(linkKey: linkKey, accountID: account.id))
+        repeat {
+            let movements = try await provider.asyncRequest(endpoint!)
 
-        if movements.isEmpty {
-            print("No movements to display")
-        } else {
-            movements.forEach {
-                print($0.comment)
+            movements.data.forEach {
+                print($0.description, $0.amount)
             }
-        }
+
+            guard try movements.last != endpoint && TerminalHelpers.agree(prompt: "Continue?") else {
+                break
+            }
+            endpoint = movements.next
+        } while endpoint != nil
     }
 
     private func getSecret(_ key: String, prompt: String) throws -> String {
@@ -93,5 +102,3 @@ struct FintocTool: ParsableCommand {
         return inputKey
     }
 }
-
-FintocTool.main()
