@@ -2,6 +2,12 @@
 
 import PackageDescription
 
+#if os(Linux)
+let weblinkingDependency = Target.Dependency.product("WebLinking", "WebLinking")
+#else
+let weblinkingDependency = Target.Dependency.product("WebLinking.swift", "WebLinking")
+#endif
+
 let package = Package(
     name: "Fintoc",
     platforms: [.macOS("12.0")],
@@ -25,7 +31,7 @@ let package = Package(
             ]
         ),
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
-        .target(name: "APIBuilder", dependencies: [.product("WebLinking.swift", "WebLinking")]),
+        .target(name: "APIBuilder", dependencies: [weblinkingDependency]),
 
         .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),
