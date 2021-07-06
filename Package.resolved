@@ -20,8 +20,8 @@
         }
       },
       {
-        "package": "WebLinking.swift",
-        "repositoryURL": "https://github.com/andlister/WebLinking.swift",
+        "package": "WebLinking",
+        "repositoryURL": "https://github.com/sergiocampama/WebLinking",
         "state": {
           "branch": "master",
           "revision": "e8f93b4896bafda8bcf353fc4460bfce5351c2b7",

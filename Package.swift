@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
-        .package(url: "https://github.com/andlister/WebLinking.swift", .branch("master")),
+        .package(url: "https://github.com/sergiocampama/WebLinking", .branch("master")),
     ],
     targets: [
         .executableTarget(
@@ -25,14 +25,13 @@ let package = Package(
             ]
         ),
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
-        .target(name: "APIBuilder", dependencies: [.product("WebLinking.swift", "WebLinking")]),
+        .target(name: "APIBuilder", dependencies: [.product("WebLinking", "WebLinking")]),
 
         .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),
         .testTarget(name: "FintocTests", dependencies: ["Fintoc", "TestHelpers"]),
     ]
 )
-
 
 extension Target.Dependency {
     static func product(
