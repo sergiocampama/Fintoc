@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
-        .package(url: "https://github.com/sergiocampama/WebLinking", .branch("master")),
+        .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
     ],
     targets: [
         .executableTarget(
