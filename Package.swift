@@ -3,40 +3,46 @@
 import PackageDescription
 
 #if swift(>=5.5)
-let sAPBranch: Package.Dependency.Requirement = .branch("async")
+let additionalTargets = [
+    Target.executableTarget(
+        name: "ft",
+        dependencies: [
+            "APIBuilder",
+            "Fintoc",
+            .product("KeychainAccess", "KeychainAccess", .when(platforms: [.macOS])),
+            .product("swift-argument-parser", "ArgumentParser"),
+        ]
+    ),
+]
+let additionalProducts = [Product.executable(name: "ft", targets: ["ft"])]
+let additionalDependencies = [
+    Package.Dependency.package(url: "https://github.com/apple/swift-argument-parser", .branch("async"))
+]
 #else
-let sAPBranch: Package.Dependency.Requirement = .branch("main")
+let additionalTargets = [Target]()
+let additinalProducts = [Product]()
+let additionalDependencies = [Package.Dependency]()
 #endif
+
 
 let package = Package(
     name: "Fintoc",
     platforms: [.macOS("11.0")],
     products: [
-        .executable(name: "ft", targets: ["ft"]),
         .library(name: "Fintoc", targets: ["Fintoc"]),
-    ],
+    ] + additionalProducts,
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", sAPBranch),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
         .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
-    ],
+    ] + additionalDependencies,
     targets: [
-        .executableTarget(
-            name: "ft",
-            dependencies: [
-                "APIBuilder",
-                "Fintoc",
-                .product("KeychainAccess", "KeychainAccess", .when(platforms: [.macOS])),
-                .product("swift-argument-parser", "ArgumentParser"),
-            ]
-        ),
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
         .target(name: "APIBuilder", dependencies: [.product("WebLinking", "WebLinking")]),
 
         .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),
         .testTarget(name: "FintocTests", dependencies: ["Fintoc", "TestHelpers"]),
-    ]
+    ] + additionalTargets
 )
 
 extension Target.Dependency {
