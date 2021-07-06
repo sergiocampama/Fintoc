@@ -20,7 +20,7 @@ let additionalDependencies = [
 ]
 #else
 let additionalTargets = [Target]()
-let additinalProducts = [Product]()
+let additionalProducts = [Product]()
 let additionalDependencies = [Package.Dependency]()
 #endif
 
