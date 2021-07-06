@@ -15,8 +15,9 @@ let additionalTargets = [
     ),
 ]
 let additionalProducts = [Product.executable(name: "ft", targets: ["ft"])]
-let additionalDependencies = [
-    Package.Dependency.package(url: "https://github.com/apple/swift-argument-parser", .branch("async"))
+let additionalDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
+    .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
 ]
 #else
 let additionalTargets = [Target]()
@@ -32,7 +33,6 @@ let package = Package(
         .library(name: "Fintoc", targets: ["Fintoc"]),
     ] + additionalProducts,
     dependencies: [
-        .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
         .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
     ] + additionalDependencies,
     targets: [
