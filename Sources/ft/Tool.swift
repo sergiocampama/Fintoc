@@ -22,7 +22,16 @@ struct FintocTool: ParsableCommand {
         )
         let provider = APIProvider(configuration: configuration)
 
-        let links = try await provider.asyncRequest(.getLinks())
+        let links: [Link]
+        #if swift(>=5.5)
+        if #available(macOS 12.0, *) {
+            links = try await provider.asyncRequest(.getLinks())
+        } else {
+            links = try provider.syncRequest(.getLinks())
+        }
+        #else
+        links = try provider.syncRequest(.getLinks())
+        #endif
 
         let sparseLink: Link
         if links.isEmpty {
@@ -44,7 +53,16 @@ struct FintocTool: ParsableCommand {
             prompt: "Enter the link key for \(sparseLink.institution.name)"
         )
 
-        let link = try await provider.asyncRequest(.getLink(linkKey: linkKey))
+        let link: Link
+        #if swift(>=5.5)
+        if #available(macOS 12.0, *) {
+            link = try await provider.asyncRequest(.getLink(linkKey: linkKey))
+        } else {
+            link = try provider.syncRequest(.getLink(linkKey: linkKey))
+        }
+        #else
+        link = try provider.syncRequest(.getLink(linkKey: linkKey))
+        #endif
 
         guard let accounts = link.accounts, !accounts.isEmpty else {
             print("No accounts found for \(link.institution.name)")
@@ -72,8 +90,17 @@ struct FintocTool: ParsableCommand {
         )
 
         repeat {
-            let movements = try await provider.asyncRequest(endpoint!)
-
+            let movements: Paged<[Movement]>
+            #if swift(>=5.5)
+            if #available(macOS 12.0, *) {
+                movements = try await provider.asyncRequest(endpoint!)
+            } else {
+                movements = try provider.syncRequest(endpoint!)
+            }
+            #else
+            movements = try provider.syncRequest(endpoint!)
+            #endif
+            
             movements.data.forEach {
                 print($0.description, $0.amount)
             }

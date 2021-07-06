@@ -2,15 +2,21 @@
 
 import PackageDescription
 
+#if swift(>=5.5)
+let sAPBranch: Package.Dependency.Requirement = .branch("async")
+#else
+let sAPBranch: Package.Dependency.Requirement = .branch("main")
+#endif
+
 let package = Package(
     name: "Fintoc",
-    platforms: [.macOS("12.0")],
+    platforms: [.macOS("11.0")],
     products: [
         .executable(name: "ft", targets: ["ft"]),
         .library(name: "Fintoc", targets: ["Fintoc"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
+        .package(url: "https://github.com/apple/swift-argument-parser", sAPBranch),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
         .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
     ],
