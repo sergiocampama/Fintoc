@@ -66,4 +66,33 @@ public struct APIEndpointBuilder<T> {
             contentType: contentType
         )
     }
+
+    public static func buildBlock(
+        _ path: String,
+        _ parameters: [String: Any],
+        _ body: Data? = nil,
+        _ contentType: String? = nil
+    ) -> APIEndpoint<T> {
+        return APIEndpoint(
+            path: path,
+            method: .get,
+            parameters: parameters,
+            body: body,
+            contentType: contentType
+        )
+    }
+
+    public static func buildBlock(
+        _ path: String,
+        _ body: Data?,
+        _ contentType: String?
+    ) -> APIEndpoint<T> {
+        return APIEndpoint(
+            path: path,
+            method: .get,
+            parameters: nil,
+            body: body,
+            contentType: contentType
+        )
+    }
 }

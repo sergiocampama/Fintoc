@@ -13,11 +13,10 @@ extension APIEndpoint where T == Link {
     }
 
     public static func updateLink(linkKey: String, active: Bool) -> Self {
-        APIEndpoint {
+        let body = try! JSONEncoder().encode(["active": active])
+        return APIEndpoint {
             "/v1/links/\(linkKey)"
-            HTTPMethod.get
-            [String: String]()
-            try! JSONEncoder().encode(["active": active])
+            body
             "application/json"
         }
     }
