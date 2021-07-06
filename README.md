@@ -24,6 +24,9 @@ provider.request(.getLinks()) { result in
 
 // Sync API (blocking)
 let links = try provider.syncRequest(.getLinks())
+
+// Async API (awaiting, only available with Swift 5.5)
+let links = try provider.syncRequest(.getLinks())
 ```
 
 You can also check out the `ft` tool which has some basic usages of the API.
