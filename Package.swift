@@ -30,6 +30,7 @@ let package = Package(
     name: "Fintoc",
     platforms: [.macOS("11.0")],
     products: [
+        .library(name: "APIBuilder", targets: ["APIBuilder"]),
         .library(name: "Fintoc", targets: ["Fintoc"]),
     ] + additionalProducts,
     dependencies: [
