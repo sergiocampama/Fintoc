@@ -9,15 +9,22 @@ public class DefaultRequestExecutor: RequestExecutor {
 
     public init() {}
 
-    public func execute(_ request: URLRequest, completion: @escaping (Result<Response, Error>) -> Void) {
+    public func execute(
+      _ request: URLRequest,
+      queue: DispatchQueue,
+      completion: @escaping (Result<Response, Error>) -> Void
+    ) {
         urlSession.dataTask(with: request) { data, response, error in
+            let result: Result<Response, Error>
             if let error = error {
-                completion(.failure(StringError("\(error)")))
+                result = .failure(StringError("\(error)"))
             } else if let response = response as? HTTPURLResponse, let data = data {
-                completion(.success(Response(httpResponse: response, data: data)))
+                result = .success(Response(httpResponse: response, data: data))
             } else {
-                completion(.failure(StringError("Unknown error")))
+                result = .failure(StringError("Unknown error"))
             }
+
+            queue.async { completion(result) }
         }.resume()
     }
 

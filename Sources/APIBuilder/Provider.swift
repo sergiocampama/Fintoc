@@ -19,34 +19,34 @@ public class APIProvider {
 
     public func syncRequest(_ endpoint: APIEndpoint<Void>) throws {
         var result: Result<Void, Error>? = nil
-        request(endpoint) { innerResult in
+        let sema = DispatchSemaphore(value: 0)
+        self.request(endpoint, queue: DispatchQueue.global()) { innerResult in
             result = innerResult
+            sema.signal()
         }
-        while result == nil && RunLoop.current.run(mode: .default, before: .distantPast) {
-            usleep(1)
-        }
+        sema.wait()
         try result!.get()
     }
 
     public func syncRequest<T: Codable>(_ endpoint: APIEndpoint<T>) throws -> T {
         var result: Result<T, Error>? = nil
-        request(endpoint) { innerResult in
+        let sema = DispatchSemaphore(value: 0)
+        self.request(endpoint, queue: DispatchQueue.global()) { innerResult in
             result = innerResult
+            sema.signal()
         }
-        while result == nil && RunLoop.current.run(mode: .default, before: .distantPast) {
-            usleep(1)
-        }
+        sema.wait()
         return try result!.get()
     }
 
     public func syncRequest<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) throws -> Paged<T> {
         var result: Result<Paged<T>, Error>? = nil
-        request(endpoint) { innerResult in
+        let sema = DispatchSemaphore(value: 0)
+        request(endpoint, queue: DispatchQueue.global()) { innerResult in
             result = innerResult
+            sema.signal()
         }
-        while result == nil && RunLoop.current.run(mode: .default, before: .distantPast) {
-            usleep(1)
-        }
+        sema.wait()
         return try result!.get()
     }
 
@@ -69,7 +69,9 @@ public class APIProvider {
 
     @available(swift 5.5)
     @available(macOS 12.0, *)
-    public func asyncRequest<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) async throws -> Paged<T> {
+    public func asyncRequest<T: Codable>(
+      _ endpoint: APIEndpoint<Paged<T>>
+    ) async throws -> Paged<T> {
         let request = requestForEndpoint(endpoint)
         let response = try await requestExecutor.execute(request)
         let data = try unpack(response: response) as T
@@ -79,9 +81,13 @@ public class APIProvider {
     }
     #endif
 
-    public func request(_ endpoint: APIEndpoint<Void>, completion: @escaping (Result<Void, Error>) -> Void) {
+    public func request(
+      _ endpoint: APIEndpoint<Void>,
+      queue: DispatchQueue,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
         let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request) { result in
+        requestExecutor.execute(request, queue: queue) { result in
             let newResult: Result<Void, Error> = result.flatMap { response in
                 do {
                     try self.validate(response: response)
@@ -94,9 +100,13 @@ public class APIProvider {
         }
     }
 
-    public func request<T: Codable>(_ endpoint: APIEndpoint<T>, completion: @escaping (Result<T, Error>) -> Void) {
+    public func request<T: Codable>(
+      _ endpoint: APIEndpoint<T>,
+      queue: DispatchQueue,
+      completion: @escaping (Result<T, Error>) -> Void
+    ) {
         let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request) { result in
+        requestExecutor.execute(request, queue: queue) { result in
             let newResult: Result<T, Error> = result.flatMap { response in
                 do {
                     return try .success(self.unpack(response: response))
@@ -110,10 +120,11 @@ public class APIProvider {
 
     public func request<T: Codable>(
         _ endpoint: APIEndpoint<Paged<T>>,
+        queue: DispatchQueue,
         completion: @escaping (Result<Paged<T>, Error>) -> Void
     ) {
         let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request) { result in
+        requestExecutor.execute(request, queue: queue) { result in
             let newResult: Result<Paged<T>, Error> = result.flatMap { response in
                 do {
                     let data = try self.unpack(response: response) as T

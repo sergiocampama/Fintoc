@@ -17,12 +17,11 @@ final class ProviderTests: XCTestCase {
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
         let expectation = XCTestExpectation(description: "Response")
-        apiProvider.request(endpoint) { result in
+        apiProvider.request(endpoint, queue: DispatchQueue.main) { result in
             XCTAssertTrue(result.isSuccess)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1)
-
     }
 
     func testDataRequest() throws {
@@ -35,13 +34,12 @@ final class ProviderTests: XCTestCase {
         let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
 
         let expectation = XCTestExpectation(description: "Response")
-        apiProvider.request(endpoint) { result in
+        apiProvider.request(endpoint, queue: DispatchQueue.main) { result in
             XCTAssertTrue(result.isSuccess)
             let response = try! result.get()
             XCTAssertEqual(response, expectedMessage)
             expectation.fulfill()
         }
-
         wait(for: [expectation], timeout: 1)
     }
 

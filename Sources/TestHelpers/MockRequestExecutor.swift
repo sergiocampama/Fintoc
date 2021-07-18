@@ -12,10 +12,12 @@ public class MockRequestExecutor: RequestExecutor {
         self.expectedResult = expectedResult
     }
 
-    public func execute(_ request: URLRequest, completion: @escaping (Result<Response, Error>) -> Void) {
-        DispatchQueue.main.async {
-            completion(self.expectedResult)
-        }
+    public func execute(
+      _ request: URLRequest,
+      queue: DispatchQueue,
+      completion: @escaping (Result<Response, Error>) -> Void
+    ) {
+        queue.async { completion(self.expectedResult) }
     }
 
     #if swift(>=5.5)

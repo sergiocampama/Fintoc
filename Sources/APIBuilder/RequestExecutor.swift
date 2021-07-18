@@ -19,7 +19,11 @@ public struct Response: Equatable {
 }
 
 public protocol RequestExecutor {
-    func execute(_ request: URLRequest, completion: @escaping (Result<Response, Error>) -> Void)
+    func execute(
+      _ request: URLRequest,
+      queue: DispatchQueue,
+      completion: @escaping (Result<Response, Error>) -> Void
+    )
 
     #if swift(>=5.5)
     @available(swift 5.5)
