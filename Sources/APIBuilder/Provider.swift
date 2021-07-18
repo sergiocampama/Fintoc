@@ -1,4 +1,5 @@
 import Foundation
+@_exported import NIO
 @_implementationOnly import WebLinking
 
 #if canImport(FoundationNetworking)
@@ -8,46 +9,40 @@ import FoundationNetworking
 public class APIProvider {
     let configuration: APIConfiguration
     let requestExecutor: RequestExecutor
+    let group: EventLoopGroup
 
     public init(
         configuration: APIConfiguration,
-        requestExecutor: RequestExecutor = DefaultRequestExecutor()
+        group: EventLoopGroup,
+        requestExecutor: RequestExecutor? = nil
     ) {
         self.configuration = configuration
-        self.requestExecutor = requestExecutor
+        self.group = group
+        self.requestExecutor = requestExecutor ?? DefaultRequestExecutor(group: group)
     }
 
-    public func syncRequest(_ endpoint: APIEndpoint<Void>) throws {
-        var result: Result<Void, Error>? = nil
-        let sema = DispatchSemaphore(value: 0)
-        self.request(endpoint, queue: DispatchQueue.global()) { innerResult in
-            result = innerResult
-            sema.signal()
+    public func request(_ endpoint: APIEndpoint<Void>) -> EventLoopFuture<Void> {
+        let request = requestForEndpoint(endpoint)
+        return requestExecutor.execute(request).flatMapThrowing { response in
+            try self.validate(response: response)
+            return ()
         }
-        sema.wait()
-        try result!.get()
     }
 
-    public func syncRequest<T: Codable>(_ endpoint: APIEndpoint<T>) throws -> T {
-        var result: Result<T, Error>? = nil
-        let sema = DispatchSemaphore(value: 0)
-        self.request(endpoint, queue: DispatchQueue.global()) { innerResult in
-            result = innerResult
-            sema.signal()
+    public func request<T: Codable>(_ endpoint: APIEndpoint<T>) -> EventLoopFuture<T> {
+        let request = requestForEndpoint(endpoint)
+        return requestExecutor.execute(request).flatMapThrowing { response in
+            return try self.unpack(response: response)
         }
-        sema.wait()
-        return try result!.get()
     }
 
-    public func syncRequest<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) throws -> Paged<T> {
-        var result: Result<Paged<T>, Error>? = nil
-        let sema = DispatchSemaphore(value: 0)
-        request(endpoint, queue: DispatchQueue.global()) { innerResult in
-            result = innerResult
-            sema.signal()
+    public func request<T: Codable>(_ endpoint: APIEndpoint<Paged<T>>) -> EventLoopFuture<Paged<T>> {
+        let request = requestForEndpoint(endpoint)
+        return requestExecutor.execute(request).flatMapThrowing { response in
+            let data = try self.unpack(response: response) as T
+            let pageLinks = self.pageLinks(from: response.httpResponse, for: endpoint)
+            return Paged(data: data, pageLinks: pageLinks)
         }
-        sema.wait()
-        return try result!.get()
     }
 
     #if swift(>=5.5)
@@ -80,64 +75,6 @@ public class APIProvider {
         return Paged(data: data, pageLinks: pageLinks)
     }
     #endif
-
-    public func request(
-      _ endpoint: APIEndpoint<Void>,
-      queue: DispatchQueue,
-      completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request, queue: queue) { result in
-            let newResult: Result<Void, Error> = result.flatMap { response in
-                do {
-                    try self.validate(response: response)
-                    return .success(())
-                } catch {
-                    return .failure(error)
-                }
-            }
-            completion(newResult)
-        }
-    }
-
-    public func request<T: Codable>(
-      _ endpoint: APIEndpoint<T>,
-      queue: DispatchQueue,
-      completion: @escaping (Result<T, Error>) -> Void
-    ) {
-        let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request, queue: queue) { result in
-            let newResult: Result<T, Error> = result.flatMap { response in
-                do {
-                    return try .success(self.unpack(response: response))
-                } catch {
-                    return .failure(error)
-                }
-            }
-            completion(newResult)
-        }
-    }
-
-    public func request<T: Codable>(
-        _ endpoint: APIEndpoint<Paged<T>>,
-        queue: DispatchQueue,
-        completion: @escaping (Result<Paged<T>, Error>) -> Void
-    ) {
-        let request = requestForEndpoint(endpoint)
-        requestExecutor.execute(request, queue: queue) { result in
-            let newResult: Result<Paged<T>, Error> = result.flatMap { response in
-                do {
-                    let data = try self.unpack(response: response) as T
-                    let pageLinks = self.pageLinks(from: response.httpResponse, for: endpoint)
-                    return .success(Paged(data: data, pageLinks: pageLinks))
-
-                } catch {
-                    return .failure(error)
-                }
-            }
-            completion(newResult)
-        }
-    }
 
     public func requestForEndpoint<T>(_ endpoint: APIEndpoint<T>) -> URLRequest {
         var components = URLComponents()

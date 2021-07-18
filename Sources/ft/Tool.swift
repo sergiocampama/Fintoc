@@ -14,16 +14,18 @@ struct FintocTool: ParsableCommand {
     var movementsPerPage = 30
 
     func run() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
+
         let configuration = try FintocAPIConfiguration(
             authToken: getSecret("apiKey", prompt: "Enter your Fintoc API key")
         )
-        let provider = APIProvider(configuration: configuration)
+        let provider = APIProvider(configuration: configuration, group: group)
 
         let links: [Link]
         if #available(macOS 12.0, *) {
             links = try await provider.asyncRequest(.getLinks())
         } else {
-            links = try provider.syncRequest(.getLinks())
+          links = try provider.request(.getLinks()).wait()
         }
 
         let sparseLink: Link
@@ -50,7 +52,7 @@ struct FintocTool: ParsableCommand {
         if #available(macOS 12.0, *) {
             link = try await provider.asyncRequest(.getLink(linkKey: linkKey))
         } else {
-            link = try provider.syncRequest(.getLink(linkKey: linkKey))
+            link = try provider.request(.getLink(linkKey: linkKey)).wait()
         }
 
         guard let accounts = link.accounts, !accounts.isEmpty else {
@@ -83,7 +85,7 @@ struct FintocTool: ParsableCommand {
             if #available(macOS 12.0, *) {
                 movements = try await provider.asyncRequest(endpoint!)
             } else {
-                movements = try provider.syncRequest(endpoint!)
+                movements = try provider.request(endpoint!).wait()
             }
 
             movements.data.forEach {

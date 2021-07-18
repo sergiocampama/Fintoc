@@ -35,10 +35,17 @@ let package = Package(
     ] + additionalProducts,
     dependencies: [
         .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.30.0"),
     ] + additionalDependencies,
     targets: [
         .target(name: "Fintoc", dependencies: ["APIBuilder"]),
-        .target(name: "APIBuilder", dependencies: [.product("WebLinking", "WebLinking")]),
+        .target(
+            name: "APIBuilder",
+            dependencies: [
+                .product("WebLinking", "WebLinking"),
+                .product("swift-nio", "NIO"),
+            ]
+        ),
 
         .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
         .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),

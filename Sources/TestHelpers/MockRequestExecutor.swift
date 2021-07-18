@@ -6,18 +6,17 @@ import FoundationNetworking
 #endif
 
 public class MockRequestExecutor: RequestExecutor {
+    public let group: EventLoopGroup
+
     public let expectedResult: Result<Response, Error>
 
-    public init(expectedResult: Result<Response, Error>) {
+    public init(group: EventLoopGroup, expectedResult: Result<Response, Error>) {
+        self.group = group
         self.expectedResult = expectedResult
     }
 
-    public func execute(
-      _ request: URLRequest,
-      queue: DispatchQueue,
-      completion: @escaping (Result<Response, Error>) -> Void
-    ) {
-        queue.async { completion(self.expectedResult) }
+    public func execute(_ request: URLRequest) -> EventLoopFuture<Response> {
+        return group.next().makeCompletedFuture(expectedResult)
     }
 
     #if swift(>=5.5)

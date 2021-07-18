@@ -1,4 +1,5 @@
 import Foundation
+import NIO
 
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -19,11 +20,7 @@ public struct Response: Equatable {
 }
 
 public protocol RequestExecutor {
-    func execute(
-      _ request: URLRequest,
-      queue: DispatchQueue,
-      completion: @escaping (Result<Response, Error>) -> Void
-    )
+    func execute(_ request: URLRequest) -> EventLoopFuture<Response>
 
     #if swift(>=5.5)
     @available(swift 5.5)

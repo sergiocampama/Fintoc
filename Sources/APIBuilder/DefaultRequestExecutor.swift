@@ -1,4 +1,5 @@
 import Foundation
+import NIO
 
 #if canImport(FoundationNetworking)
 import FoundationNetworking
@@ -6,14 +7,14 @@ import FoundationNetworking
 
 public class DefaultRequestExecutor: RequestExecutor {
     let urlSession = URLSession(configuration: .default)
+    let group: EventLoopGroup
 
-    public init() {}
+    public init(group: EventLoopGroup) {
+        self.group = group
+    }
 
-    public func execute(
-      _ request: URLRequest,
-      queue: DispatchQueue,
-      completion: @escaping (Result<Response, Error>) -> Void
-    ) {
+    public func execute(_ request: URLRequest) -> EventLoopFuture<Response> {
+        let promise = group.next().makePromise(of: Response.self)
         urlSession.dataTask(with: request) { data, response, error in
             let result: Result<Response, Error>
             if let error = error {
@@ -23,9 +24,9 @@ public class DefaultRequestExecutor: RequestExecutor {
             } else {
                 result = .failure(StringError("Unknown error"))
             }
-
-            queue.async { completion(result) }
+            promise.completeWith(result)
         }.resume()
+        return promise.futureResult
     }
 
     #if swift(>=5.5)

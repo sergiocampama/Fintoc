@@ -4,6 +4,7 @@ import XCTest
 
 final class ProviderTests: XCTestCase {
     let configuration = MockConfiguration(host: URL(string: "https://some.api.com")!)
+    let group: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
     struct SomeCodable: Codable, Equatable {
         let message: String
@@ -11,13 +12,13 @@ final class ProviderTests: XCTestCase {
 
     func testVoidRequest() throws {
         let expectedResponse = Response(statusCode: 200, data: Data())
-        let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
+        let mockExecutor = MockRequestExecutor(group: group, expectedResult: .success(expectedResponse))
         let endpoint = APIEndpoint<Void>(path: "/someResource")
 
-        let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
+        let apiProvider = APIProvider(configuration: configuration, group: group, requestExecutor: mockExecutor)
 
         let expectation = XCTestExpectation(description: "Response")
-        apiProvider.request(endpoint, queue: DispatchQueue.main) { result in
+        apiProvider.request(endpoint).whenComplete { result in
             XCTAssertTrue(result.isSuccess)
             expectation.fulfill()
         }
@@ -28,13 +29,13 @@ final class ProviderTests: XCTestCase {
         let expectedMessage = SomeCodable(message: "hello, world!")
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
-        let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
+        let mockExecutor = MockRequestExecutor(group: group, expectedResult: .success(expectedResponse))
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
-        let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
+        let apiProvider = APIProvider(configuration: configuration, group: group, requestExecutor: mockExecutor)
 
         let expectation = XCTestExpectation(description: "Response")
-        apiProvider.request(endpoint, queue: DispatchQueue.main) { result in
+        apiProvider.request(endpoint).whenComplete { result in
             XCTAssertTrue(result.isSuccess)
             let response = try! result.get()
             XCTAssertEqual(response, expectedMessage)
@@ -47,12 +48,12 @@ final class ProviderTests: XCTestCase {
         let expectedMessage = SomeCodable(message: "hello, world!")
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
-        let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
+        let mockExecutor = MockRequestExecutor(group: group, expectedResult: .success(expectedResponse))
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
-        let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
+        let apiProvider = APIProvider(configuration: configuration, group: group, requestExecutor: mockExecutor)
 
-        let response = try apiProvider.syncRequest(endpoint)
+        let response = try apiProvider.request(endpoint).wait()
         XCTAssertEqual(response, expectedMessage)
     }
 
@@ -63,10 +64,10 @@ final class ProviderTests: XCTestCase {
         let expectedMessage = SomeCodable(message: "hello, world!")
 
         let expectedResponse = try Response(statusCode: 200, data: JSONEncoder().encode(expectedMessage))
-        let mockExecutor = MockRequestExecutor(expectedResult: .success(expectedResponse))
+        let mockExecutor = MockRequestExecutor(group: group, expectedResult: .success(expectedResponse))
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
 
-        let apiProvider = APIProvider(configuration: configuration, requestExecutor: mockExecutor)
+        let apiProvider = APIProvider(configuration: configuration, group: group, requestExecutor: mockExecutor)
 
         let response = try await apiProvider.asyncRequest(endpoint)
         XCTAssertEqual(response, expectedMessage)
@@ -75,7 +76,7 @@ final class ProviderTests: XCTestCase {
 
     func testBasicEndpointRequest() throws {
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
-        let apiProvider = APIProvider(configuration: configuration)
+        let apiProvider = APIProvider(configuration: configuration, group: group)
         let urlRequest = apiProvider.requestForEndpoint(endpoint)
         XCTAssertEqual(urlRequest.url?.absoluteString, "https://some.api.com/someResource")
         XCTAssertEqual(urlRequest.httpMethod, "GET")
@@ -90,7 +91,7 @@ final class ProviderTests: XCTestCase {
             contentType: "application/octet-stream"
         )
 
-        let apiProvider = APIProvider(configuration: configuration)
+        let apiProvider = APIProvider(configuration: configuration, group: group)
         let urlRequest = apiProvider.requestForEndpoint(endpoint)
         XCTAssertEqual(urlRequest.url?.absoluteString, "https://some.api.com/someResource?query=item")
         XCTAssertEqual(urlRequest.httpMethod, "POST")
@@ -104,7 +105,7 @@ final class ProviderTests: XCTestCase {
             requestHeaders: ["Authorization": "my_api_token"]
         )
         let endpoint = APIEndpoint<SomeCodable>(path: "/someResource")
-        let apiProvider = APIProvider(configuration: configuration)
+        let apiProvider = APIProvider(configuration: configuration, group: group)
         let urlRequest = apiProvider.requestForEndpoint(endpoint)
         XCTAssertEqual(urlRequest.url?.absoluteString, "https://some.api.com/someResource")
         XCTAssertEqual(urlRequest.httpMethod, "GET")
