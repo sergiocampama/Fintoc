@@ -3,6 +3,7 @@
 import PackageDescription
 
 #if swift(>=5.5)
+let minMacOS = "12.0"
 let additionalTargets = [
     Target.executableTarget(
         name: "ft",
@@ -20,36 +21,31 @@ let additionalDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/kishikawakatsumi/KeychainAccess", from: "4.2.2"),
 ]
 #else
+let minMacOS = "11.0"
 let additionalTargets = [Target]()
 let additionalProducts = [Product]()
 let additionalDependencies = [Package.Dependency]()
 #endif
 
-
 let package = Package(
     name: "Fintoc",
-    platforms: [.macOS("11.0")],
+    platforms: [.macOS(minMacOS)],
     products: [
-        .library(name: "APIBuilder", targets: ["APIBuilder"]),
         .library(name: "Fintoc", targets: ["Fintoc"]),
     ] + additionalProducts,
     dependencies: [
-        .package(url: "https://github.com/sergiocampama/WebLinking", .branch("main")),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.30.0"),
+        .package(url: "https://github.com/sergiocampama/APIBuilder", .branch("main")),
     ] + additionalDependencies,
     targets: [
-        .target(name: "Fintoc", dependencies: ["APIBuilder"]),
-        .target(
-            name: "APIBuilder",
+        .target(name: "Fintoc", dependencies: [.product("APIBuilder", "APIBuilder")]),
+        .testTarget(
+            name: "FintocTests",
             dependencies: [
-                .product("WebLinking", "WebLinking"),
-                .product("swift-nio", "NIO"),
+                "Fintoc",
+                .product("APIBuilder", "APIBuilder"),
+                .product("APIBuilder", "APIBuilderTestHelpers")
             ]
         ),
-
-        .target(name: "TestHelpers", dependencies: ["APIBuilder"]),
-        .testTarget(name: "APIBuilderTests", dependencies: ["APIBuilder", "TestHelpers"]),
-        .testTarget(name: "FintocTests", dependencies: ["Fintoc", "TestHelpers"]),
     ] + additionalTargets
 )
 

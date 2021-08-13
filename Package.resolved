@@ -2,20 +2,11 @@
   "object": {
     "pins": [
       {
-        "package": "KeychainAccess",
-        "repositoryURL": "https://github.com/kishikawakatsumi/KeychainAccess",
+        "package": "APIBuilder",
+        "repositoryURL": "https://github.com/sergiocampama/APIBuilder",
         "state": {
-          "branch": null,
-          "revision": "84e546727d66f1adc5439debad16270d0fdd04e7",
-          "version": "4.2.2"
-        }
-      },
-      {
-        "package": "swift-argument-parser",
-        "repositoryURL": "https://github.com/apple/swift-argument-parser",
-        "state": {
-          "branch": "async",
-          "revision": "ddc37e4c53ed030bf2d75aaf3e9d489cc6495134",
+          "branch": "main",
+          "revision": "0c66bd30dc56fc4e41f335bdd1f4fce2a4c82e07",
           "version": null
         }
       },
@@ -24,8 +15,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "d79e33308b0ac83326b0ead0ea6446e604b8162d",
-          "version": "2.30.0"
+          "revision": "9a992ee3de1f8da9f2968fc96b26714834f3105f",
+          "version": "2.31.1"
         }
       },
       {
